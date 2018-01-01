@@ -2,6 +2,8 @@
 	if (have_posts()): while (have_posts()) : the_post();
     $post_id = get_the_ID();
     $post_cat = wp_get_post_terms($post_id, 'category');
+    $author = get_post_meta( $post_id, 'author', true);
+    $byline = wp_get_post_terms($post_id, 'byline');
 ?>
 
 <article id="post-<?php the_ID(); ?>" class="post-news">
@@ -14,8 +16,11 @@
 		<h2 class="post-title-news"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>
 		<div class="entry-meta-news">
 			<?php
-				_e('oleh ', 'mongabay');
-				echo get_post_meta( $post_id, 'author', true );
+				if($byline) {
+                    echo 'oleh '.get_the_term_list( $post_id, 'byline', '', ', ', '' );
+                } else {
+                    echo 'oleh '.$author;
+                }
 				echo ' ';
 				the_time('j F Y');
 			?>
