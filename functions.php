@@ -2,7 +2,7 @@
     include (get_template_directory().'/custom-code/figure-caption.php');
     include (get_template_directory().'/custom-code/thumbnailed-recent-posts.php');
     include (get_template_directory().'/custom-code/taxonomy-byline.php');
-    //include (get_template_directory().'/custom-code/taxonomy-location.php');
+    include (get_template_directory().'/custom-code/taxonomy-location.php');
     //include (get_template_directory().'/custom-code/taxonomy-serial.php');
     //include (get_template_directory().'/custom-code/taxonomy-topic.php');
     include (get_template_directory().'/custom-code/meta.php');
