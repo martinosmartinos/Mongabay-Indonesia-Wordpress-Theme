@@ -5,30 +5,29 @@ add_action('wp_head','mongabay_google_analytics');
 function mongabay_google_analytics() {
 	
 	$lines = array();
-	//ga('create', 'UA-65671366-1', 'auto');
 	
 	if(is_single()) {
+		global $post;
 		$args = array('orderby' => 'count', 'order' => 'DESC');
-		$topics = wp_get_object_terms(get_the_ID(), 'topic' , $args);
-		$locations = wp_get_object_terms(get_the_ID(), 'location' , $args);
+		$tags = wp_get_object_terms(get_the_ID(), 'post_tag');
+		$categories = wp_get_object_terms(get_the_ID(), 'category', $args);
 		$bylines =  wp_get_object_terms(get_the_ID(), 'byline' , $args);
-		$serials =  wp_get_object_terms(get_the_ID(), 'serial' , $args);
-		$licenses =  wp_get_object_terms(get_the_ID(), 'license' , $args);
-		$editor = get_the_author();
-		
-		foreach ($topics as $topic) $topics_f[]= $topic -> slug;
-		foreach ($locations as $location) $locations_f[]= $location -> slug;
+		$byline_slug = $byline -> slug;
+		$byline_legacy =  get_post_meta(get_the_ID(), 'author', true);
+
+		$author_id = $post->post_author;
+		$author = get_the_author_meta('user_nicename', $author_id);
+
+		foreach ($tags as $tag) $tags_f[]= $tag -> slug;
 		foreach ($bylines as $byline) $bylines_f[]= $byline -> slug;
-		foreach ($serials as $serial) $serials_f[]= $serial -> slug;
-		foreach ($licenses as $license) $licenses_f[]= $license -> slug;
+		foreach ($categories as $category) $category_f[]= $category -> slug;
 
 		
-		if (isset($topics_f)) $lines[] = "ga('set', 'dimension1', '".implode(' ',$topics_f)." '); ";
-		if (isset($locations_f)) $lines[] = "ga('set', 'dimension2', '".implode(' ',$locations_f)." '); ";
+		if (isset($tags_f)) $lines[] = "ga('set', 'dimension1', '".implode(' ',$tags_f)." '); ";
+		if (isset($category_f)) $lines[] = "ga('set', 'dimension2', '".implode(' ',$category_f)." '); ";
 		if (isset($bylines_f)) $lines[] = "ga('set', 'dimension3', '".implode(' ',$bylines_f)." '); ";
-		if (isset($serials_f)) $lines[] = "ga('set', 'dimension4', '".implode(' ',$serials_f)." '); ";
-		if (isset($licenses_f)) $lines[] = "ga('set', 'dimension5', '".implode(' ',$licenses_f)." '); ";
-		if (isset($editor)) $lines[] = "ga('set', 'dimension7', '".$editor." '); ";
+		if ($byline_legacy) $lines[] = "ga('set', 'dimension4', '".$byline_legacy." '); ";
+		if ($author) $lines[] = "ga('set', 'dimension5', '".$author." '); ";
 	}
 
 	?>
