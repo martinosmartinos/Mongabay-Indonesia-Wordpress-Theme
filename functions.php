@@ -3,8 +3,7 @@
     include (get_template_directory().'/custom-code/thumbnailed-recent-posts.php');
     include (get_template_directory().'/custom-code/taxonomy-byline.php');
     include (get_template_directory().'/custom-code/taxonomy-location.php');
-    //include (get_template_directory().'/custom-code/taxonomy-serial.php');
-    //include (get_template_directory().'/custom-code/taxonomy-topic.php');
+    include (get_template_directory().'/custom-code/feed-vars.php');
     include (get_template_directory().'/custom-code/meta.php');
     include (get_template_directory().'/custom-code/menus.php');
     include (get_template_directory().'/custom-code/url-rewrites.php');
@@ -559,6 +558,17 @@ function mongabay_sanitized_content() {
         add_filter( 'script_loader_src', 'remove_query_string', 15, 1 );
         add_filter( 'style_loader_src', 'remove_query_string', 15, 1 );
     }
+
+// Customize RSS feed
+remove_all_actions( 'do_feed_rss2' );
+add_action( 'do_feed_rss2', 'mongabay_feed_rss2', 10, 1 );
+
+function mongabay_feed_rss2() {
+
+    $rss_template = get_template_directory() . '/custom-code/feed-rss2.php';
+    load_template( $rss_template );
+
+}
 
 /*------------------------------------*\
     Actions + Filters
