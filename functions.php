@@ -28,6 +28,7 @@ function mongabay_sanitized_content() {
         $content = str_replace(array('<br>','<BR>','<br/>','<BR/>'),"\n",$content);
         $content = preg_replace('/ /','', $content);
         $content = str_replace('<p></p>', '', $content);
+        $content = str_replace('&nbsp;', '', $content);
         $content = apply_filters('the_content', $content);
         echo $content;
 }
@@ -170,10 +171,10 @@ function mongabay_sanitized_content() {
     function mongabay_styles() {
         wp_register_style('main', get_template_directory_uri() . '/style.css', array(), '1.0', 'all');
         wp_enqueue_style('main');
-        wp_register_style('framework', get_template_directory_uri() . '/css/framework.min.css', array(), '1.0', 'all');
-        wp_enqueue_style('framework');
         wp_register_style('boostrap', get_template_directory_uri() . '/css/bootstrap.min.css', array(), '4.0.0', 'all');
         wp_enqueue_style('boostrap');
+        wp_register_style('framework', get_template_directory_uri() . '/css/framework.min.css', array(), '1.0', 'all');
+        wp_enqueue_style('framework');
     }
 
 // Register Navigation
@@ -570,6 +571,111 @@ function mongabay_feed_rss2() {
 
 }
 
+// Add the filter parameter for API
+function rest_api_filter_add_filters() {
+    foreach ( get_post_types( array( 'show_in_rest' => true ), 'objects' ) as $post_type ) {
+        add_filter( 'rest_' . $post_type->name . '_query', 'rest_api_filter_add_filter_param', 10, 2 );
+    }
+}
+
+function rest_api_filter_add_filter_param( $args, $request ) {
+    if ( empty( $request['filter'] ) || ! is_array( $request['filter'] ) ) {
+        return $args;
+    }
+    $filter = $request['filter'];
+    if ( isset( $filter['posts_per_page'] ) && ( (int) $filter['posts_per_page'] >= 1 && (int) $filter['posts_per_page'] <= 100 ) ) {
+        $args['posts_per_page'] = $filter['posts_per_page'];
+    }
+    global $wp;
+    $vars = apply_filters( 'query_vars', $wp->public_query_vars );
+    foreach ( $vars as $var ) {
+        if ( isset( $filter[ $var ] ) ) {
+            $args[ $var ] = $filter[ $var ];
+        }
+    }
+    return $args;
+}
+
+// Sanitize json output for content. Consumed by APP.
+function mongabay_sanitize_json( $data, $post, $context ) {
+    $allowtags = array(
+        'a' => array(
+            'href' => array(),
+            'data-wpel-link' => array(),
+            'rel' => array()
+        ),
+        'p' => array(),
+        'b' => array(),
+        'strong' => array(),
+        'h1' => array(),
+        'h2' => array(),
+        'h3' => array(),
+        'h4' => array(),
+        'h5' => array(),
+        'h6' => array(),
+        'br' => array(),
+        'em' => array(),
+        'ul' => array(
+            'class' => array()
+        ),
+        'ol' => array(
+            'class' => array()
+        ),
+        'li' => array(),
+        'img' => array(
+            'alt' => array(),
+            'width' => array(),
+            'height' => array(),
+            'class' => array(),
+            'src' => array(),
+            'srcset' => array(),
+            'data-soliloquy-src' => array()
+        ),
+        'noscript' => array(),
+        'style' => array(),
+        'span' => array(
+            'class' => array()
+        ),
+        'figure' => array(),
+        'figcaption' => array(),
+        'iframe' => array(
+            'width' => array(),
+            'height'=> array(),
+            'src' => array()
+        ),
+        'div' => array(
+            'data-image-src' => array()
+        )
+    );
+    $data->data['content'] = preg_replace('/<noscript\b[>]*>(.*?)<\/noscript>/s', '', $data->data['content']);
+    $data->data['content'] = preg_replace('/<p><\/p>/', '', $data->data['content']);
+    $data->data['content'] = preg_replace('/<p>&nbsp;<\/p>/', '', $data->data['content']);
+    $data->data['content'] = preg_replace('/<div class=\'container\'>\\n<div class=\'row justify-content-center\'>\\n<div id=\'main\' class=\'col-lg-8 single\'>\\n/s', '', $data->data['content']);
+    $data->data['content'] = preg_replace('/<div class=\'clearfix\'><\/div>\\n/s', '', $data->data['content']);
+    $data->data['content'] = preg_replace('/<\/div>\\n<\/div>\\n<\/div>\\n/s', '', $data->data['content']);
+    $data->data['content'] = wp_kses($data->data['content'], $allowtags);
+    $data->data['content'] = preg_replace('/\\n<div>\\n<div>\\n<ul class/s', '<ul class', $data->data['content']);
+    $data->data['content'] = preg_replace('/\/>\\n<div>\\n<div>.*\w*<\/div>\\n<\/div>\\n<\/li>/', '/></li>', $data->data['content']);
+    $data->data['content'] = preg_replace('/<!--.*\w*-->/', '', $data->data['content']);
+    $data->data['content'] = preg_replace('/<p>\\n<p>/s', '<p>', $data->data['content']);
+    $data->data['content'] = preg_replace('/<a href=\\"https:\/\/news[.]mongabay[.]com\/\d\d\d\d\/\d\d\//s', '<a href="mongabay://article/', $data->data['content']);
+    $data->data['content'] = preg_replace('/<a href=\\"https:\/\/cn[.]mongabay[.]com\/\d\d\d\d\/\d\d\//s', '<a href="mongabay_cn://article/', $data->data['content']);
+    $data->data['content'] = preg_replace('/<a href=\\"https:\/\/de[.]mongabay[.]com\/\d\d\d\d\/\d\d\//s', '<a href="mongabay_de://article/', $data->data['content']);
+    $data->data['content'] = preg_replace('/<a href=\\"https:\/\/es[.]mongabay[.]com\/\d\d\d\d\/\d\d\//s', '<a href="mongabay_es://article/', $data->data['content']);
+    $data->data['content'] = preg_replace('/<a href=\\"https:\/\/fr[.]mongabay[.]com\/\d\d\d\d\/\d\d\//s', '<a href="mongabay_fr://article/', $data->data['content']);
+    $data->data['content'] = preg_replace('/<a href=\\"https:\/\/it[.]mongabay[.]com\/\d\d\d\d\/\d\d\//s', '<a href="mongabay_it://article/', $data->data['content']);
+    $data->data['content'] = preg_replace('/<a href=\\"https:\/\/jp[.]mongabay[.]com\/\d\d\d\d\/\d\d\//s', '<a href="mongabay_jp://article/', $data->data['content']);
+    $data->data['content'] = preg_replace('/<a href=\\"https:\/\/pt[.]mongabay[.]com\/\d\d\d\d\/\d\d\//s', '<a href="mongabay_pt://article/', $data->data['content']);
+    $data->data['content'] = preg_replace('/<a href=\\"https:\/\/india[.]mongabay[.]com\/\d\d\d\d\/\d\d\//s', '<a href="mongabay_in://article/', $data->data['content']);
+    $data->data['content'] = preg_replace('/\\n/s', '', $data->data['content']);
+    $data->data['content'] = preg_replace('/<\/li><\/ul><\/div><p><\/div>/', '</li></ul>', $data->data['content']);
+    return $data;
+}
+function mongabay_sanitize_page_json( $data, $post, $context ) {
+    $data->data['content'] = preg_replace('/\\n/s', '', $data->data['content']);
+    return $data;
+}
+
 /*------------------------------------*\
     Actions + Filters
 \*------------------------------------*/
@@ -611,6 +717,8 @@ function mongabay_feed_rss2() {
     add_filter('the_excerpt', 'do_shortcode'); // Allows Shortcodes to be executed in Excerpt (Manual Excerpts only)
     add_filter('style_loader_tag', 'mongabay_style_remove'); // Remove 'text/css' from enqueued stylesheet
     add_filter('post_thumbnail_html', 'remove_thumbnail_dimensions', 10); // Remove width and height dynamic attributes to thumbnails
+    add_filter( 'rest_prepare_post', 'mongabay_sanitize_json', 100, 3 ); // Get content ready for App
+    add_filter( 'rest_prepare_page', 'mongabay_sanitize_page_json', 100, 3 ); //Get content ready for App
 
     // Remove Filters
     remove_filter('the_excerpt', 'wpautop'); // Remove <p> tags from Excerpt altogether
