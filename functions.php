@@ -687,6 +687,7 @@ function mongabay_sanitize_page_json( $data, $post, $context ) {
     add_action('init', 'register_mongabay_menu'); // Add Blank Menu
     add_action('widgets_init', 'my_remove_recent_comments_style'); // Remove inline Recent Comment Styles from wp_head()
     add_action('init', 'mongabay_pagination'); // Add our Pagination
+    add_action( 'rest_api_init', 'rest_api_filter_add_filters' ); // Add the filter parameter for API
 
     // Remove Actions
     remove_action('wp_head', 'feed_links_extra', 3); // Display the links to the extra feeds such as category feeds
