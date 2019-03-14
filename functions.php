@@ -596,6 +596,41 @@ function rest_api_filter_add_filter_param( $args, $request ) {
     return $args;
 }
 
+// Onesignal notification filter
+function onesignal_send_notification_filter($fields, $new_status, $old_status, $post) {
+    $fields_dup = $fields;
+    $fields_dup['isAndroid'] = true;
+    $fields_dup['isIos'] = true;
+    $fields_dup['isAnyWeb'] = false;
+    $fields_dup['isWP'] = false;
+    $fields_dup['isAdm'] = false;
+    $fields_dup['isChrome'] = false;
+    $fields_dup['data'] = array(
+        "notifyurl" => $fields['url']
+    );
+    $fields_dup['tags'] = array(
+      array("key" => "notify_domain", "relation" => "=", "value" => home_url())
+    );
+    unset($fields_dup['url']);
+    $ch = curl_init();
+    $onesignal_post_url = "https://onesignal.com/api/v1/notifications";
+    $onesignal_wp_settings = OneSignal::get_onesignal_settings();
+    $onesignal_auth_key = $onesignal_wp_settings['app_rest_api_key'];
+    curl_setopt($ch, CURLOPT_URL, $onesignal_post_url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        'Content-Type: application/json',
+        'Authorization: Basic ' . $onesignal_auth_key
+    ));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HEADER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields_dup));
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    return $fields;
+}
+
 // Sanitize json output for content. Consumed by APP.
 function mongabay_sanitize_json( $data, $post, $context ) {
     $allowtags = array(
@@ -720,6 +755,7 @@ function mongabay_sanitize_page_json( $data, $post, $context ) {
     add_filter('post_thumbnail_html', 'remove_thumbnail_dimensions', 10); // Remove width and height dynamic attributes to thumbnails
     add_filter( 'rest_prepare_post', 'mongabay_sanitize_json', 100, 3 ); // Get content ready for App
     add_filter( 'rest_prepare_page', 'mongabay_sanitize_page_json', 100, 3 ); //Get content ready for App
+    add_filter('onesignal_send_notification', 'onesignal_send_notification_filter', 10, 4); // Add Onesignal notifications filter
 
     // Remove Filters
     remove_filter('the_excerpt', 'wpautop'); // Remove <p> tags from Excerpt altogether
