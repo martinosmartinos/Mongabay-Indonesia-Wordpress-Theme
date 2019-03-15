@@ -26,9 +26,9 @@
 function mongabay_sanitized_content() {
         $content = get_the_content();
         $content = str_replace(array('<br>','<BR>','<br/>','<BR/>'),"\n",$content);
-        $content = preg_replace('/ /','', $content);
+        //$content = preg_replace('/ /','', $content);
         $content = str_replace('<p></p>', '', $content);
-        $content = str_replace('&nbsp;', '', $content);
+        //$content = str_replace('&nbsp;', '', $content);
         $content = apply_filters('the_content', $content);
         echo $content;
 }
@@ -693,6 +693,7 @@ function mongabay_sanitize_json( $data, $post, $context ) {
     $data->data['content'] = preg_replace('/\/>\\n<div>\\n<div>.*\w*<\/div>\\n<\/div>\\n<\/li>/', '/></li>', $data->data['content']);
     $data->data['content'] = preg_replace('/<!--.*\w*-->/', '', $data->data['content']);
     $data->data['content'] = preg_replace('/<p>\\n<p>/s', '<p>', $data->data['content']);
+    $data->data['content'] = preg_replace('/<p>.*?\s*(<iframe.*>*.<\/iframe>)\s*<\/p>/iU', '\1', $content);
     $data->data['content'] = preg_replace('/<a href=\\"https:\/\/news[.]mongabay[.]com\/\d\d\d\d\/\d\d\//s', '<a href="mongabay://article/', $data->data['content']);
     $data->data['content'] = preg_replace('/<a href=\\"https:\/\/cn[.]mongabay[.]com\/\d\d\d\d\/\d\d\//s', '<a href="mongabay_cn://article/', $data->data['content']);
     $data->data['content'] = preg_replace('/<a href=\\"https:\/\/de[.]mongabay[.]com\/\d\d\d\d\/\d\d\//s', '<a href="mongabay_de://article/', $data->data['content']);
