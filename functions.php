@@ -693,7 +693,6 @@ function mongabay_sanitize_json( $data, $post, $context ) {
     $data->data['content'] = preg_replace('/\/>\\n<div>\\n<div>.*\w*<\/div>\\n<\/div>\\n<\/li>/', '/></li>', $data->data['content']);
     $data->data['content'] = preg_replace('/<!--.*\w*-->/', '', $data->data['content']);
     $data->data['content'] = preg_replace('/<p>\\n<p>/s', '<p>', $data->data['content']);
-    $data->data['content'] = preg_replace('/<p>.*?\s*(<iframe.*>*.<\/iframe>)\s*<\/p>/iU', '\1', $content);
     $data->data['content'] = preg_replace('/<a href=\\"https:\/\/news[.]mongabay[.]com\/\d\d\d\d\/\d\d\//s', '<a href="mongabay://article/', $data->data['content']);
     $data->data['content'] = preg_replace('/<a href=\\"https:\/\/cn[.]mongabay[.]com\/\d\d\d\d\/\d\d\//s', '<a href="mongabay_cn://article/', $data->data['content']);
     $data->data['content'] = preg_replace('/<a href=\\"https:\/\/de[.]mongabay[.]com\/\d\d\d\d\/\d\d\//s', '<a href="mongabay_de://article/', $data->data['content']);
@@ -710,6 +709,12 @@ function mongabay_sanitize_json( $data, $post, $context ) {
 function mongabay_sanitize_page_json( $data, $post, $context ) {
     $data->data['content'] = preg_replace('/\\n/s', '', $data->data['content']);
     return $data;
+}
+
+// Remove p tags from images, scripts, and iframes.
+function mongabay_remove_iframe_ptags( $content ) {
+  $content = preg_replace('/<p>.*?\s*(<iframe.*>*.<\/iframe>)\s*<\/p>/iU', '\1', $content);
+  return $content;
 }
 
 /*------------------------------------*\
@@ -754,6 +759,7 @@ function mongabay_sanitize_page_json( $data, $post, $context ) {
     add_filter('the_excerpt', 'do_shortcode'); // Allows Shortcodes to be executed in Excerpt (Manual Excerpts only)
     add_filter('style_loader_tag', 'mongabay_style_remove'); // Remove 'text/css' from enqueued stylesheet
     add_filter('post_thumbnail_html', 'remove_thumbnail_dimensions', 10); // Remove width and height dynamic attributes to thumbnails
+    add_filter( 'the_content', 'mongabay_remove_iframe_ptags', 13 ); // Remove paragraphs from iframe    
     add_filter( 'rest_prepare_post', 'mongabay_sanitize_json', 100, 3 ); // Get content ready for App
     add_filter( 'rest_prepare_page', 'mongabay_sanitize_page_json', 100, 3 ); //Get content ready for App
     add_filter('onesignal_send_notification', 'onesignal_send_notification_filter', 10, 4); // Add Onesignal notifications filter
