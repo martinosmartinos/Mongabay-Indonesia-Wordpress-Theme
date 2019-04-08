@@ -717,6 +717,32 @@ function mongabay_remove_iframe_ptags( $content ) {
   return $content;
 }
 
+// Function to detect if we are dealing with featured aside article
+function mongabay_layout() {
+    if ( is_single() ) {
+        $post_id = get_the_ID();
+        $aside = get_post_format($post_id);
+        if ( $aside == 'aside' ) {
+            $container = 'container-fluid';
+        }
+        else {
+            $container = 'container';
+        }
+    }
+    else {
+        $container = 'container';
+    }
+    return $container;
+}
+
+// Featured articles template
+function mongabay_featured() {
+    if ( mongabay_layout() == "container-fluid" ) {
+        include (TEMPLATEPATH . '/single-featured.php');
+        exit;
+    }
+}
+
 /*------------------------------------*\
     Actions + Filters
 \*------------------------------------*/
@@ -729,6 +755,7 @@ function mongabay_remove_iframe_ptags( $content ) {
     add_action('widgets_init', 'my_remove_recent_comments_style'); // Remove inline Recent Comment Styles from wp_head()
     add_action('init', 'mongabay_pagination'); // Add our Pagination
     add_action( 'rest_api_init', 'rest_api_filter_add_filters' ); // Add the filter parameter for API
+    add_action('template_redirect', 'mongabay_featured'); // Redirect template if content is Featured
 
     // Remove Actions
     remove_action('wp_head', 'feed_links_extra', 3); // Display the links to the extra feeds such as category feeds
@@ -763,7 +790,7 @@ function mongabay_remove_iframe_ptags( $content ) {
     add_filter( 'rest_prepare_post', 'mongabay_sanitize_json', 100, 3 ); // Get content ready for App
     add_filter( 'rest_prepare_page', 'mongabay_sanitize_page_json', 100, 3 ); //Get content ready for App
     add_filter('onesignal_send_notification', 'onesignal_send_notification_filter', 10, 4); // Add Onesignal notifications filter
-
+    
     // Remove Filters
     remove_filter('the_excerpt', 'wpautop'); // Remove <p> tags from Excerpt altogether
     remove_filter( 'the_content', 'wpautop' );
