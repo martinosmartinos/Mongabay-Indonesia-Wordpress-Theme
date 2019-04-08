@@ -717,32 +717,6 @@ function mongabay_remove_iframe_ptags( $content ) {
   return $content;
 }
 
-// Function to detect if we are dealing with featured aside article
-function mongabay_layout() {
-    if ( is_single() ) {
-        $post_id = get_the_ID();
-        $aside = get_post_format($post_id);
-        if ( $aside == 'aside' ) {
-            $container = 'container-fluid';
-        }
-        else {
-            $container = 'container';
-        }
-    }
-    else {
-        $container = 'container';
-    }
-    return $container;
-}
-
-// Featured articles template
-function mongabay_featured() {
-    if ( mongabay_layout() == "container-fluid" ) {
-        include (TEMPLATEPATH . '/single-featured.php');
-        exit;
-    }
-}
-
 /*------------------------------------*\
     Actions + Filters
 \*------------------------------------*/
