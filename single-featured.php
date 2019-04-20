@@ -51,7 +51,7 @@
                                 <?php echo $topics; ?>
                             </div>
                         </div>
-                        <?php mongabay_comments(); ?>
+                        <?php //mongabay_comments(); ?>
                     </article>
                     <!-- /article -->
                     <?php endwhile; ?>
