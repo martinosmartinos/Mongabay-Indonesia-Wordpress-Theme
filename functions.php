@@ -111,8 +111,8 @@ function mongabay_sanitized_content() {
         if ( is_single() ) {
             $post_id = get_the_ID();
             $aside = get_post_format($post_id);
-            $featured = get_post_meta( $post_id, 'featured_as', false );
-            if ( $aside == 'aside' && in_array('featured', $featured) ) {
+            //$featured = get_post_meta( $post_id, 'featured_as', false );
+            if ( $aside == 'aside' ) {
                 $container = 'container-fluid';
             }
             else {
